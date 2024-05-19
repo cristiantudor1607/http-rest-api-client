@@ -14,5 +14,7 @@
 #define LOGOUT 8
 #define EXIT 9
 
+#define JSON_INTEND 4
+
 
 #endif //_DEFINES_HPP

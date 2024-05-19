@@ -13,6 +13,7 @@
 
 #include "include/defines.hpp"
 #include "include/utils.hpp"
+#include "include/http-utils.hpp"
 
 using namespace std;
 
@@ -40,40 +41,6 @@ void init_client(int *sockfd) {
     *sockfd = fd;
 }
 
-int parse_input(string& input) {
-    // TODO: Add pre-processing
-
-    if (input == "register")
-        return REGISTER;
-
-    if (input == "login")
-        return LOGIN;
-
-    if (input == "enter_library")
-        return ENTER_LIBRARY;
-
-    if (input == "get_books")
-        return GET_BOOKS;
-
-    if (input == "get_book")
-        return GET_BOOK;
-
-    if (input == "add_book")
-        return ADD_BOOK;
-
-    if (input == "delete_book")
-        return DELETE_BOOK;
-
-    if (input == "logout")
-        return LOGOUT;
-
-    if (input == "exit")
-        return EXIT;
-
-    return -1;
-}
-
-
 int main() {
     int sockfd = -1;
     init_client(&sockfd);
@@ -81,15 +48,16 @@ int main() {
         return 0;
 
     bool stop = false;
-    string input;
+    string input, request;
     string username, password;
     for (;;) {
         getline(cin, input);
         int opcode = parse_input(input);
         switch (opcode) {
             case REGISTER:
-                cout << "REGISTER\n";
                 prompt_credentials(username, password);
+                request = generate_register_request(username, password);
+                cout << request;
 
                 break;
             case LOGIN:

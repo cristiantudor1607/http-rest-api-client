@@ -1,10 +1,10 @@
 CC=g++
-CFLAGS=-c -g -Wall -Wextra -std=c++11 -Wno-error=unused-variable
+CFLAGS=-c -g -Wall -Wextra -std=c++17 -Wno-error=unused-variable
 LDFLAGS=
 
 PROJECT=client
 
-SRCS=client.cpp lib/utils.cpp
+SRCS=client.cpp lib/utils.cpp lib/http-utils.cpp
 
 #SRCS=client.cpp
 OBJS=$(SRCS:.cpp=.o)
