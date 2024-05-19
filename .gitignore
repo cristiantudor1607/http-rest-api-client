@@ -6,3 +6,5 @@ tmp/
 .idea/
 .vscode/
 
+# other
+.DS_Store
