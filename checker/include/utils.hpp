@@ -2,11 +2,26 @@
 #define _UTILS_HPP
 
 #include <iostream>
+#include <unistd.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "buffer.h"
+#ifdef __cplusplus
+}
+#endif
 
 #include "defines.hpp"
+#include "buffer.h"
+
+
 using namespace std;
 
 void prompt_credentials(string& username, string& password);
 int parse_input(string& input);
+
+int send_to_server(int sockfd, const char *message);
+char *receive_from_server(int sockfd);
 
 #endif //_UTILS_HPP

@@ -1,5 +1,13 @@
 #include "../include/utils.hpp"
 
+#define BUFLEN 4096
+#define LINELEN 1000
+
+#define HEADER_TERMINATOR "\r\n\r\n"
+#define HEADER_TERMINATOR_SIZE (sizeof(HEADER_TERMINATOR) - 1)
+#define CONTENT_LENGTH "Content-Length: "
+#define CONTENT_LENGTH_SIZE (sizeof(CONTENT_LENGTH) - 1)
+
 void prompt_credentials(string& username, string& password) {
     fprintf(stdout, "username=");
     getline(cin, username);
@@ -38,4 +46,86 @@ int parse_input(string& input) {
         return EXIT;
 
     return -1;
+}
+
+int send_to_server(int sockfd, const char *message)
+{
+    int bytes, sent = 0;
+    int total = strlen(message);
+
+    do
+    {
+        bytes = write(sockfd, message + sent, total - sent);
+        if (bytes < 0) {
+            fprintf(stderr, "[ERROR] Failed to write request to socket. Exiting...\n");
+            return -1;
+        }
+
+        if (bytes == 0) {
+            break;
+        }
+
+        sent += bytes;
+    } while (sent < total);
+
+    return sent;
+}
+
+char *receive_from_server(int sockfd)
+{
+    char response[BUFLEN];
+    buffer buffer = buffer_init();
+    int header_end = 0;
+    int content_length = 0;
+
+    do {
+        int bytes = read(sockfd, response, BUFLEN);
+
+        if (bytes < 0){
+            fprintf(stderr, "[ERROR] Failed to read response from socket. Exiting...\n");
+            buffer_destroy(&buffer);
+            return NULL;
+        }
+
+        if (bytes == 0) {
+            break;
+        }
+
+        buffer_add(&buffer, response, (size_t) bytes);
+
+        header_end = buffer_find(&buffer, HEADER_TERMINATOR, HEADER_TERMINATOR_SIZE);
+
+        if (header_end >= 0) {
+            header_end += HEADER_TERMINATOR_SIZE;
+
+            int content_length_start = buffer_find_insensitive(&buffer, CONTENT_LENGTH, CONTENT_LENGTH_SIZE);
+
+            if (content_length_start < 0) {
+                continue;
+            }
+
+            content_length_start += CONTENT_LENGTH_SIZE;
+            content_length = strtol(buffer.data + content_length_start, NULL, 10);
+            break;
+        }
+    } while (1);
+    size_t total = content_length + (size_t) header_end;
+
+    while (buffer.size < total) {
+        int bytes = read(sockfd, response, BUFLEN);
+
+        if (bytes < 0) {
+            fprintf(stderr, "[ERROR] Failed to read response from socket. Exiting...\n");
+            buffer_destroy(&buffer);
+            return NULL;
+        }
+
+        if (bytes == 0) {
+            break;
+        }
+
+        buffer_add(&buffer, response, (size_t) bytes);
+    }
+    buffer_add(&buffer, "", 1);
+    return buffer.data;
 }

@@ -12,8 +12,9 @@
 #include <netinet/in.h>
 
 #include "include/defines.hpp"
-#include "include/utils.hpp"
 #include "include/http-utils.hpp"
+
+#include "include/utils.hpp"
 
 using namespace std;
 
@@ -48,7 +49,8 @@ int main() {
         return 0;
 
     bool stop = false;
-    string input, request;
+    char *accumulator;
+    string input, request, response;
     string username, password;
     for (;;) {
         getline(cin, input);
@@ -57,7 +59,12 @@ int main() {
             case REGISTER:
                 prompt_credentials(username, password);
                 request = generate_register_request(username, password);
-                cout << request;
+                cout << "Sending request...\n";
+                send_to_server(sockfd, request.data());
+
+                cout << "Response:\n";
+                accumulator = receive_from_server(sockfd);
+                cout << accumulator;
 
                 break;
             case LOGIN:

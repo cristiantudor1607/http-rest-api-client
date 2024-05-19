@@ -1,28 +1,34 @@
-CC=g++
-CFLAGS=-c -g -Wall -Wextra -std=c++17 -Wno-error=unused-variable
+CPP=g++
+C=gcc
+CPPFLAGS=-g -Wall -Wextra -std=c++17 -Wno-error=unused-variable
+CFLAGS=-g -Wall -Wextra -Wno-error=unused-variable
 LDFLAGS=
 
 PROJECT=client
 
-SRCS=client.cpp lib/utils.cpp lib/http-utils.cpp
+CPPSRCS=client.cpp lib/utils.cpp lib/http-utils.cpp
+CSRCS=lib/buffer.c
 
-#SRCS=client.cpp
-OBJS=$(SRCS:.cpp=.o)
+
+CPPOBJS=$(CPPSRCS:.cpp=.o)
+COBJS=$(CSRCS:.c=.o)
 
 all: $(PROJECT)
 
 build: client
 
-client: $(OBJS)
-	$(CC) $(OBJS) -o $@
+client: $(CPPOBJS) $(COBJS)
+	$(CPP) $(CPPOBJS) $(COBJS) -o $@
 
 .cpp.o:
-	$(CC) $(CFLAGS) -fPIC $< -o $@
+	$(CPP) -c $(CPPFLAGS) -fPIC $< -o $@
 .c.o:
-	$(CC) $(CFLAGS) -fPIC $< -o $@
+	$(C) -c $(CFLAGS) -fPIC $< -o $@
 
 run:
 	./client
 
+
+
 clean:
-	rm -rf *.o client $(OBJS)
+	rm -rf *.o */*.o client
