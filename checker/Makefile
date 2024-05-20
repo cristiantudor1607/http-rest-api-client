@@ -31,4 +31,4 @@ run:
 
 
 clean:
-	rm -rf *.o */*.o client
+	rm -rf *.o lib/*.o client
