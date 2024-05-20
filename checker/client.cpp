@@ -18,12 +18,12 @@
 
 using namespace std;
 
-void init_client(int *sockfd) {
+int open_connection(int *sockfd) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         *sockfd = -1;
         fprintf(stderr, "[ERROR] socket() failed. Exiting...\n");
-        return;
+        return -1;
     }
 
     struct sockaddr_in addr;
@@ -36,22 +36,24 @@ void init_client(int *sockfd) {
         *sockfd = -1;
         fprintf(stderr, "[ERROR] connect() failed. Exiting...\n");
         close(fd);
-        return;
+        return - 1;
     }
 
     *sockfd = fd;
+    return 0;
+}
+
+void close_connection(int sockfd) {
+    close(sockfd);
 }
 
 int main() {
     int sockfd = -1;
-    init_client(&sockfd);
-    if (sockfd < 0)
-        return 0;
-
     bool stop = false;
     char *accumulator;
     string input, request, response;
     string username, password;
+
     for (;;) {
         getline(cin, input);
         int opcode = parse_input(input);
@@ -59,16 +61,33 @@ int main() {
             case REGISTER:
                 prompt_credentials(username, password);
                 request = generate_register_request(username, password);
+                if (open_connection(&sockfd) < 0) {
+                    stop = true;
+                    break;
+                }
+
                 cout << "Sending request...\n";
                 send_to_server(sockfd, request.data());
-
                 cout << "Response:\n";
                 accumulator = receive_from_server(sockfd);
                 cout << accumulator;
+                close_connection(sockfd);
 
                 break;
             case LOGIN:
-                cout << "LOGIN\n";
+                prompt_credentials(username, password);
+                request = generate_login_request(username, password);
+                if (open_connection(&sockfd) < 0) {
+                    stop = true;
+                    break;
+                }
+
+                cout << "Sending request...\n";
+                send_to_server(sockfd, request.data());
+                cout << "Response:\n";
+                accumulator = receive_from_server(sockfd);
+                cout << accumulator;
+                close_connection(sockfd);
                 break;
             case ENTER_LIBRARY:
                 cout << "ENTER LIBRARY\n";
@@ -101,6 +120,5 @@ int main() {
             break;
     }
 
-    close(sockfd);
     return 0;
 }

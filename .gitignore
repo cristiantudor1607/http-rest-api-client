@@ -9,3 +9,4 @@ tmp/
 # other
 .DS_Store
 *.o
+client
