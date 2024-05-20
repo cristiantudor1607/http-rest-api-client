@@ -20,6 +20,8 @@
 #define MEM_FAIL (-1)
 #define LOGIN_FAIL 1
 #define LOGIN_SUCCESS 2
+#define REGISTER_FAIL 1
+#define REGISTER_SUCCESS 2
 #define OK 0
 
 using namespace std;
@@ -72,15 +74,24 @@ int do_register() {
 
     send_to_server(sockfd, request.data());
     acc = receive_from_server(sockfd);
+    close_connection(sockfd);
     if (!acc) {
         fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
-        close(sockfd);
         return MEM_FAIL;
     }
 
-    cout << acc << endl;
+    int ret;
+    char *json_start = basic_extract_json_response(acc);
+    if (json_start == NULL) {
+        ret = REGISTER_SUCCESS;
+        fprintf(stdout, "[SUCCESS] [201 Created] User %s registered.\n", username.c_str());
+    } else {
+        fprintf(stdout, "[ERROR] [400 Bad Request] %s\n", extract_error(json_start).c_str());
+        ret = REGISTER_FAIL;
+    }
+
     free(acc);
-    return OK;
+    return ret;
 }
 
 int do_login(string& token) {
@@ -97,24 +108,26 @@ int do_login(string& token) {
 
     send_to_server(sockfd, request.data());
     acc = receive_from_server(sockfd);
+    close_connection(sockfd);
     if (!acc) {
         fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
-        close(sockfd);
         return MEM_FAIL;
     }
 
+    int ret;
     char *json_start = basic_extract_json_response(acc);
     if (json_start == NULL) {
         token = extract_connect_sid(acc);
-        fprintf(stdout, "[200 OK] [SUCCESS] User logged in.\n");
-        free(acc);
-        return LOGIN_SUCCESS;
+        fprintf(stdout, "[SUCCESS] [200 OK] User %s logged in.\n", username.c_str());
+        ret = LOGIN_SUCCESS;
     } else {
         token = "";
-        fprintf(stdout, "[400 Bad Request] [ERROR] %s\n", extract_error(json_start).c_str());
-        free(acc);
-        return LOGIN_FAIL;
+        fprintf(stdout, "[ERROR] [400 Bad Request] %s\n", extract_error(json_start).c_str());
+        ret = LOGIN_FAIL;
     }
+
+    free(acc);
+    return ret;
 }
 
 int main() {
@@ -128,11 +141,8 @@ int main() {
         switch (opcode) {
             case REGISTER:
                 ret = do_register();
-                if (ret < 0) {
+                if (ret < 0)
                     stop = true;
-                    break;
-                }
-
 
                 break;
             case LOGIN:
