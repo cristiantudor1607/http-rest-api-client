@@ -47,6 +47,13 @@ string extract_connect_sid(char *response) {
     return string(token, end - token);
 }
 
+string extract_token(char *json_start) {
+    json j = json::parse(json_start);
+    string s = j["token"];
+
+    return s;
+}
+
 string extract_error(char *json_start) {
     json j = json::parse(json_start);
     string s = j["error"];
@@ -67,3 +74,36 @@ string generate_login_request(string& username, string& password) {
     string login_path = "/api/v1/tema/auth/login";
     return generate_json_post_request(login_path, obj);
 }
+
+string generate_access_request(string& sid) {
+    string request = "";
+
+    string temp = "GET /api/v1/tema/library/access HTTP/1.1";
+    append_to_request(request, temp);
+
+    temp = "Host: " + string(IP);
+    append_to_request(request, temp);
+
+    temp = "Cookie: connect.sid=" + sid + "; Path=/; HttpOnly";
+    append_to_request(request, temp);
+
+    end_header(request);
+    return request;
+}
+
+string generate_get_books_request(string& jwt) {
+    string request = "";
+
+    string temp = "GET /api/v1/tema/library/books HTTP/1.1";
+    append_to_request(request, temp);
+
+    temp = "Host: " + string(IP);
+    append_to_request(request, temp);
+
+    temp = "Authorization: Bearer " + jwt;
+    append_to_request(request, temp);
+
+    end_header(request);
+    return request;
+}
+
