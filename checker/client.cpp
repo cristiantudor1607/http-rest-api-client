@@ -16,6 +16,12 @@
 
 #include "include/utils.hpp"
 
+#define OPEN_CONN_FAIL (-2)
+#define MEM_FAIL (-1)
+#define LOGIN_FAIL 1
+#define LOGIN_SUCCESS 2
+#define OK 0
+
 using namespace std;
 
 int open_connection(int *sockfd) {
@@ -47,47 +53,92 @@ void close_connection(int sockfd) {
     close(sockfd);
 }
 
-int main() {
+char *basic_extract_json_response(char *str)
+{
+    return strstr(str, "{\"");
+}
+
+int do_register() {
     int sockfd = -1;
-    bool stop = false;
-    char *accumulator;
-    string input, request, response;
+    char *acc = NULL;
+
+    string request;
     string username, password;
+
+    prompt_credentials(username, password);
+    request = generate_register_request(username, password);
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    if (!acc) {
+        fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
+        close(sockfd);
+        return MEM_FAIL;
+    }
+
+    cout << acc << endl;
+    free(acc);
+    return OK;
+}
+
+int do_login(string& token) {
+    int sockfd = -1;
+    char *acc = NULL;
+
+    string request;
+    string username, password;
+
+    prompt_credentials(username, password);
+    request = generate_login_request(username, password);
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    if (!acc) {
+        fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
+        close(sockfd);
+        return MEM_FAIL;
+    }
+
+    char *json_start = basic_extract_json_response(acc);
+    if (json_start == NULL) {
+        token = extract_connect_sid(acc);
+        fprintf(stdout, "[200 OK] [SUCCESS] User logged in.\n");
+        free(acc);
+        return LOGIN_SUCCESS;
+    } else {
+        token = "";
+        fprintf(stdout, "[400 Bad Request] [ERROR] %s\n", extract_error(json_start).c_str());
+        free(acc);
+        return LOGIN_FAIL;
+    }
+}
+
+int main() {
+    bool stop = false;
+    string input, token;
+    int ret;
 
     for (;;) {
         getline(cin, input);
         int opcode = parse_input(input);
         switch (opcode) {
             case REGISTER:
-                prompt_credentials(username, password);
-                request = generate_register_request(username, password);
-                if (open_connection(&sockfd) < 0) {
+                ret = do_register();
+                if (ret < 0) {
                     stop = true;
                     break;
                 }
 
-                cout << "Sending request...\n";
-                send_to_server(sockfd, request.data());
-                cout << "Response:\n";
-                accumulator = receive_from_server(sockfd);
-                cout << accumulator;
-                close_connection(sockfd);
 
                 break;
             case LOGIN:
-                prompt_credentials(username, password);
-                request = generate_login_request(username, password);
-                if (open_connection(&sockfd) < 0) {
+                if (do_login(token) < 0)
                     stop = true;
-                    break;
-                }
 
-                cout << "Sending request...\n";
-                send_to_server(sockfd, request.data());
-                cout << "Response:\n";
-                accumulator = receive_from_server(sockfd);
-                cout << accumulator;
-                close_connection(sockfd);
                 break;
             case ENTER_LIBRARY:
                 cout << "ENTER LIBRARY\n";
