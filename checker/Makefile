@@ -6,7 +6,7 @@ LDFLAGS=
 
 PROJECT=client
 
-CPPSRCS=client.cpp lib/utils.cpp lib/http-utils.cpp
+CPPSRCS=client.cpp lib/utils.cpp lib/http-utils.cpp lib/book.cpp
 CSRCS=lib/buffer.c
 
 

@@ -12,18 +12,15 @@
 #include <netinet/in.h>
 
 #include "include/defines.hpp"
+#include "include/book.hpp"
 #include "include/http-utils.hpp"
-
 #include "include/utils.hpp"
 
 #define OPEN_CONN_FAIL (-2)
 #define MEM_FAIL (-1)
-#define LOGIN_FAIL 1
-#define LOGIN_SUCCESS 2
-#define REGISTER_FAIL 1
-#define REGISTER_SUCCESS 2
-#define NOT_LOGGED 1
-#define NOT_ACCESS 1
+#define FAIL 1
+#define SUCCESS 2
+#define CREDENTIAL_FAIL 3
 #define OK 0
 
 using namespace std;
@@ -70,6 +67,9 @@ int do_register() {
     string username, password;
 
     prompt_credentials(username, password);
+    if (username.empty() || password.empty())
+        return CREDENTIAL_FAIL;
+
     request = generate_register_request(username, password);
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;
@@ -85,18 +85,20 @@ int do_register() {
     int ret;
     char *json_start = basic_extract_json_response(acc);
     if (json_start == NULL) {
-        ret = REGISTER_SUCCESS;
+        ret = SUCCESS;
         fprintf(stdout, "[SUCCESS] [201 Created] User %s registered.\n", username.c_str());
     } else {
         fprintf(stdout, "[ERROR] [400 Bad Request] %s\n", extract_error(json_start).c_str());
-        ret = REGISTER_FAIL;
+        ret = FAIL;
     }
 
     free(acc);
     return ret;
 }
 
-int do_login(string& sid) {
+int do_login(string& user, string& sid) {
+    user = "";
+
     int sockfd = -1;
     char *acc = NULL;
 
@@ -104,6 +106,9 @@ int do_login(string& sid) {
     string username, password;
 
     prompt_credentials(username, password);
+    if (username.empty() || password.empty())
+        return CREDENTIAL_FAIL;
+
     request = generate_login_request(username, password);
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;
@@ -120,26 +125,27 @@ int do_login(string& sid) {
     char *json_start = basic_extract_json_response(acc);
     if (json_start == NULL) {
         sid = extract_connect_sid(acc);
-        fprintf(stdout, "[SUCCESS] [200 OK] User %s logged in.\n", username.c_str());
-        ret = LOGIN_SUCCESS;
+        user = username;
+        fprintf(stdout, "[SUCCESS] [200 OK] User %s logged in.\n", user.c_str());
+        ret = SUCCESS;
     } else {
         sid = "";
         fprintf(stdout, "[ERROR] [400 Bad Request] %s\n", extract_error(json_start).c_str());
-        ret = LOGIN_FAIL;
+        ret = FAIL;
     }
 
     free(acc);
     return ret;
 }
 
-int do_enter_library(string& sid, string& jwt) {
+int do_enter_library(string& user, string& sid, string& jwt) {
     int sockfd = -1;
     char *acc;
 
     if (sid.empty()) {
         fprintf(stdout, "[ERROR] User not logged in.\n");
         jwt = "";
-        return NOT_LOGGED;
+        return FAIL;
     }
 
     if (open_connection(&sockfd) < 0)
@@ -158,19 +164,21 @@ int do_enter_library(string& sid, string& jwt) {
     char *json_start = basic_extract_json_response(acc);
     jwt = extract_token(json_start);
 
-    fprintf(stdout, "[SUCCESS] [200 OK] The user has acquired access to library.\n");
+    fprintf(stdout, "[SUCCESS] [200 OK] The user %s has acquired access"
+                    "to library.\n",
+            user.c_str());
     free(acc);
 
-    return OK;
+    return SUCCESS;
 }
 
-int do_get_books(string& jwt) {
+int do_get_books(string& user, string& jwt) {
     int sockfd = -1;
     char *acc;
 
     if (jwt.empty()) {
-        fprintf(stdout, "[ERROR] User doesn't have access to library.\n");
-        return NOT_ACCESS;
+        fprintf(stdout, "[ERROR] User %s doesn't have access to library.\n", user.c_str());
+        return FAIL;
     }
 
     if (open_connection(&sockfd) < 0)
@@ -188,38 +196,66 @@ int do_get_books(string& jwt) {
 
     // TODO: Trebuie printate cartile
     cout << acc << endl;
-    return OK;
+    free(acc);
+    return SUCCESS;
+}
+
+int do_add_book(string& user, string& sid, string& jwt) {
+    if (sid.empty()) {
+        fprintf(stdout, "[ERROR] User not logged in.\n");
+        return FAIL;
+    }
+
+    if (jwt.empty()) {
+        fprintf(stdout, "[ERROR] User %s doesn't have access to library.\n", user.c_str());
+        return FAIL;
+    }
+
+    Book book;
+    book.read();
+    switch (book.validate()) {
+        case PAGE_COUNT_WRONG:
+            fprintf(stdout, "[ERROR] The given page count isn't a number.\n");
+            return FAIL;
+        case EMPTY_FIELDS:
+            fprintf(stdout, "[ERROR] Empty strings are not allowed.\n");
+            return FAIL;
+        default:
+            break;
+    }
+
+    int sockfd;
+    char *acc;
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    return SUCCESS;
 }
 
 int main() {
-    // TODO: Mai lucreaza la mesaje
     bool stop = false;
     string input, sid, jwt;
     string username;
-    int ret;
 
     for (;;) {
         getline(cin, input);
         int opcode = parse_input(input);
         switch (opcode) {
             case REGISTER:
-                ret = do_register();
-                if (ret < 0)
+                if (do_register() < 0)
                     stop = true;
-
                 break;
             case LOGIN:
-                if (do_login(sid) < 0)
+                if (do_login(username, sid) < 0)
                     stop = true;
-
                 break;
             case ENTER_LIBRARY:
-                if (do_enter_library(sid, jwt) < 0)
+                if (do_enter_library(username, sid, jwt) < 0)
                     stop = true;
 
                 break;
             case GET_BOOKS:
-                if (do_get_books(jwt) < 0)
+                if (do_get_books(username, jwt) < 0)
                     stop = true;
 
                 break;
@@ -227,7 +263,9 @@ int main() {
                 cout << "GET BOOK\n";
                 break;
             case ADD_BOOK:
-                cout << "ADD BOOK\n";
+                if (do_add_book(username, sid, jwt) < 0)
+                    stop = true;
+
                 break;
             case DELETE_BOOK:
                 cout << "DELETE BOOK\n";

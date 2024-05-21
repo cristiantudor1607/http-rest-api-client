@@ -2,6 +2,7 @@
 #define _UTILS_HPP
 
 #include <iostream>
+#include <sstream>
 #include <unistd.h>
 
 #ifdef __cplusplus
@@ -13,10 +14,13 @@ extern "C" {
 #endif
 
 #include "defines.hpp"
-#include "buffer.h"
+#include "json.hpp"
 
+#define FORMAT_WRONG (-1)
+#define FORMAT_OK 0
 
 using namespace std;
+
 
 void prompt_credentials(string& username, string& password);
 int parse_input(string& input);
