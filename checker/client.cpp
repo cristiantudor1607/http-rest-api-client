@@ -54,11 +54,6 @@ void close_connection(int sockfd) {
     close(sockfd);
 }
 
-char *basic_extract_json_response(char *str)
-{
-    return strstr(str, "{\"");
-}
-
 int do_register() {
     int sockfd = -1;
     char *acc = NULL;
@@ -164,6 +159,7 @@ int do_enter_library(string& user, string& sid, string& jwt) {
     char *json_start = basic_extract_json_response(acc);
     jwt = extract_token(json_start);
 
+    // TODO: Check for error anyways
     fprintf(stdout, "[SUCCESS] [200 OK] The user %s has acquired access"
                     "to library.\n",
             user.c_str());
@@ -175,6 +171,12 @@ int do_enter_library(string& user, string& sid, string& jwt) {
 int do_get_books(string& user, string& jwt) {
     int sockfd = -1;
     char *acc;
+
+    if (user.empty()) {
+        fprintf(stdout, "[ERROR] User not logged in.\n");
+        jwt = "";
+        return FAIL;
+    }
 
     if (jwt.empty()) {
         fprintf(stdout, "[ERROR] User %s doesn't have access to library.\n", user.c_str());
@@ -194,8 +196,8 @@ int do_get_books(string& user, string& jwt) {
         return MEM_FAIL;
     }
 
-    // TODO: Trebuie printate cartile
-    cout << acc << endl;
+    print_books(user, acc);
+
     free(acc);
     return SUCCESS;
 }
@@ -229,6 +231,41 @@ int do_add_book(string& user, string& sid, string& jwt) {
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;
 
+    string obj = book.pack_to_json();
+    string request = generate_add_book_request(obj, jwt);
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    close_connection(sockfd);
+
+    if (!acc) {
+        fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
+        return MEM_FAIL;
+    }
+
+    parse_add_book_response(acc);
+    free(acc);
+    return SUCCESS;
+}
+
+int do_logout(string& sid) {
+    int sockfd = -1;
+    char *acc;
+
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    string request = generate_logout_request(sid);
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    close_connection(sockfd);
+
+    if (!acc) {
+        fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
+        return MEM_FAIL;
+    }
+
+    cout << acc << endl;
+    free(acc);
     return SUCCESS;
 }
 
@@ -246,6 +283,8 @@ int main() {
                     stop = true;
                 break;
             case LOGIN:
+                jwt = "";
+                sid = "";
                 if (do_login(username, sid) < 0)
                     stop = true;
                 break;
@@ -271,14 +310,13 @@ int main() {
                 cout << "DELETE BOOK\n";
                 break;
             case LOGOUT:
-                cout << "LOGOUT\n";
+                if (do_logout(sid) < 0)
+                    stop = true;
                 break;
             case EXIT:
-                cout << "EXIT\n";
                 stop = true;
                 break;
             default:
-                cout << "[ERROR] Unrecognised command\n";
                 fprintf(stdout, "[ERROR] Unknown command.\n");
                 break;
         }

@@ -2,14 +2,16 @@
 #define _CLIENT_BOOK_HPP
 
 #include <iostream>
-
 #include <string>
+
+#include "json.hpp"
 
 #define PAGE_COUNT_WRONG (-1)
 #define EMPTY_FIELDS (-2)
 #define INPUT_OK 0
 
 using namespace std;
+using json = nlohmann::json;
 
 class Book {
 private:

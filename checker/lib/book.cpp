@@ -45,6 +45,17 @@ int Book::validate() {
     return INPUT_OK;
 }
 
+string Book::pack_to_json() {
+    json j;
+    j["title"] = title;
+    j["author"] = author;
+    j["genre"] = genre;
+    j["publisher"] = publisher;
+    j["page_count"] = page_count;
+
+    return j.dump();
+}
+
 void Book::print_book() {
     fprintf(stdout, "title=%s\n", title.c_str());
     fprintf(stdout, "author=%s\n", author.c_str());
@@ -52,3 +63,4 @@ void Book::print_book() {
     fprintf(stdout, "publisher=%s\n", publisher.c_str());
     fprintf(stdout, "page_count=%s\n", input_page_count.c_str());
 }
+

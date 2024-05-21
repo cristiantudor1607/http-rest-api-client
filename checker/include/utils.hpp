@@ -27,5 +27,6 @@ int parse_input(string& input);
 
 int send_to_server(int sockfd, const char *message);
 char *receive_from_server(int sockfd);
+char *basic_extract_json_response(char *str);
 
 #endif //_UTILS_HPP
