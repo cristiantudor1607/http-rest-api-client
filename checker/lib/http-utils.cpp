@@ -133,6 +133,22 @@ string generate_add_book_request(string& obj, string& jwt) {
     return generate_json_post_request(add_book_path, obj, jwt, true);
 }
 
+string generate_delete_book_request(string& jwt, int id) {
+    string request = "";
+
+    string temp = "DELETE /api/v1/tema/library/books/" + to_string(id);
+    append_to_request(request, temp);
+
+    temp = "Host: " + string(IP);
+    append_to_request(request, temp);
+
+    temp = "Authorization: Bearer " + jwt;
+    append_to_request(request, temp);
+
+    end_header(request);
+    return request;
+}
+
 string generate_get_book_request(string& jwt, int id) {
     string request;
 

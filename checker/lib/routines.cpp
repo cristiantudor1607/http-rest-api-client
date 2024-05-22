@@ -22,7 +22,7 @@ static int parse_register_response(string& username, char *response) {
 static void parse_add_book_response(char *response) {
     string code = extract_http_status_code(response);
     if (code == "200 OK") {
-        fprintf(stdout, "[SUCCESS] [200 OK] Book added to the library.\n");
+        fprintf(stdout, "[SUCCESS] [200 OK] Book added to your library.\n");
         return;
     }
 
@@ -44,6 +44,21 @@ static int parse_get_book_response(char *response) {
     json j = json::parse(json_start);
     fprintf(stdout, "[SUCCESS] [200 OK] Book was found:\n");
     fprintf(stdout, "%s\n", j.dump(STD_INTEND).c_str());
+    return SUCCESS;
+}
+
+static int parse_delete_book_response(char *response) {
+    string code = extract_http_status_code(response);
+
+    char *json_start = basic_extract_json_response(response);
+    if (code != "200 OK") {
+        fprintf(stdout, "[ERROR] [%s] %s\n", code.c_str(),
+                extract_error(json_start).c_str());
+
+        return FAIL;
+    }
+
+    fprintf(stdout, "[SUCCESS] [200 OK] Book was deleted from your library.\n");
     return SUCCESS;
 }
 
@@ -390,4 +405,38 @@ int do_get_book(SessionData *data) {
 
     free(acc);
     return ret;
+}
+
+int do_delete_book(SessionData *data) {
+    int sockfd;
+    char *acc;
+
+    if (!data->connected) {
+        fprintf(stdout, "[ERROR] User not logged in.\n");
+        return FAIL;
+    }
+
+    if (!data->access) {
+        fprintf(stdout, "[ERROR] User %s doesn't have access "
+                        "to library.\n", data->username.c_str());
+        return FAIL;
+    }
+
+    int id;
+    if ((id = prompt_id()) < 0) {
+        fprintf(stdout, "[ERROR] The id is not a number.\n");
+        return FAIL;
+    }
+
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    string request = generate_delete_book_request(data->jwt, id);
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    close_connection(sockfd);
+
+    parse_delete_book_response(acc);
+    free(acc);
+    return SUCCESS;
 }

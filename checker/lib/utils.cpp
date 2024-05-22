@@ -169,6 +169,10 @@ bool has_only_digits(string& s) {
     return true;
 }
 
+SessionData::SessionData() {
+    this->status = 0;
+    reset();
+}
 
 void SessionData::reset() {
     this->username = "";

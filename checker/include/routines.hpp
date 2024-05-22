@@ -28,5 +28,6 @@ int do_get_books(SessionData *data);
 int do_add_book(SessionData *data);
 int do_logout(SessionData *data);
 int do_get_book(SessionData *data);
+int do_delete_book(SessionData *data);
 
 #endif //_ROUTINES_HPP

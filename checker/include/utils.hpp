@@ -45,6 +45,8 @@ public:
     bool connected;
     bool access;
 
+    int status;
+    SessionData();
     void reset();
 };
 

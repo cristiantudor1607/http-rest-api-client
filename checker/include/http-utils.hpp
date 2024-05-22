@@ -29,6 +29,7 @@ string generate_login_request(string& username, string& password);
 string generate_access_request(string& sid);
 string generate_get_books_request(string& jwt);
 string generate_add_book_request(string& obj, string& jwt);
+string generate_delete_book_request(string& jwt, int id);
 string generate_get_book_request(string& jwt, int id);
 string generate_logout_request(string& sid);
 

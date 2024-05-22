@@ -61,7 +61,8 @@ int main() {
                     stop = true;
                 break;
             case DELETE_BOOK:
-                cout << "DELETE BOOK\n";
+                if (do_delete_book(sessionData) < 0)
+                    stop = true;
                 break;
             case LOGOUT:
                 if (do_logout(sessionData) < 0)
@@ -72,6 +73,7 @@ int main() {
                 break;
             default:
                 fprintf(stdout, "[ERROR] Unknown command.\n");
+                // cout << input << "control" << endl;
                 break;
         }
 
