@@ -8,32 +8,8 @@
 #define CONTENT_LENGTH "Content-Length: "
 #define CONTENT_LENGTH_SIZE (sizeof(CONTENT_LENGTH) - 1)
 
-// https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
-static int check_credential(string& credential) {
-    stringstream ss(credential);
 
-    string word;
-    getline(ss, word, ' ');
-    credential = word;
 
-    if (getline(ss, word, ' '))
-        return FORMAT_WRONG;
-
-    credential = word;
-    return FORMAT_OK;
-}
-
-void prompt_credentials(string& username, string& password) {
-    fprintf(stdout, "username=");
-    getline(cin, username);
-    fprintf(stdout, "password=");
-    getline(cin, password);
-
-    if (check_credential(username) < 0 || check_credential(password) < 0) {
-        cout << "[ERROR] Credentials should not contain spaces.\n";
-        username = password = "";
-    }
-}
 
 int parse_input(string& input) {
     // TODO: Add pre-processing
@@ -184,6 +160,16 @@ char *basic_extract_json_response(char *str)
     return strstr(str, "{\"");
 }
 
+bool has_only_digits(string& s) {
+    for (size_t i = 0; i < s.size(); i++) {
+        if (!isdigit(s[i]))
+            return false;
+    }
+
+    return true;
+}
+
+
 void SessionData::reset() {
     this->username = "";
     this->sid = "";
@@ -191,3 +177,4 @@ void SessionData::reset() {
     this->connected = false;
     this->access = false;
 }
+

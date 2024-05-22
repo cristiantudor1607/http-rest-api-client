@@ -20,73 +20,6 @@
 
 using namespace std;
 
-int do_add_book(string& user, string& sid, string& jwt) {
-    if (sid.empty()) {
-        fprintf(stdout, "[ERROR] User not logged in.\n");
-        return FAIL;
-    }
-
-    if (jwt.empty()) {
-        fprintf(stdout, "[ERROR] User %s doesn't have access to library.\n", user.c_str());
-        return FAIL;
-    }
-
-    Book book;
-    book.read();
-    switch (book.validate()) {
-        case PAGE_COUNT_WRONG:
-            fprintf(stdout, "[ERROR] The given page count isn't a number.\n");
-            return FAIL;
-        case EMPTY_FIELDS:
-            fprintf(stdout, "[ERROR] Empty strings are not allowed.\n");
-            return FAIL;
-        default:
-            break;
-    }
-
-    int sockfd;
-    char *acc;
-    if (open_connection(&sockfd) < 0)
-        return OPEN_CONN_FAIL;
-
-    string obj = book.pack_to_json();
-    string request = generate_add_book_request(obj, jwt);
-    send_to_server(sockfd, request.data());
-    acc = receive_from_server(sockfd);
-    close_connection(sockfd);
-
-    if (!acc) {
-        fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
-        return MEM_FAIL;
-    }
-
-    parse_add_book_response(acc);
-    free(acc);
-    return SUCCESS;
-}
-
-int do_logout(string& sid) {
-    int sockfd = -1;
-    char *acc;
-
-    if (open_connection(&sockfd) < 0)
-        return OPEN_CONN_FAIL;
-
-    string request = generate_logout_request(sid);
-    send_to_server(sockfd, request.data());
-    acc = receive_from_server(sockfd);
-    close_connection(sockfd);
-
-    if (!acc) {
-        fprintf(stderr, "[ERROR] Memory fail at receiving data from server. Exiting...\n");
-        return MEM_FAIL;
-    }
-
-    cout << acc << endl;
-    free(acc);
-    return SUCCESS;
-}
-
 int main() {
     auto *sessionData = new (nothrow) SessionData();
     if (!sessionData) {
@@ -122,10 +55,12 @@ int main() {
 
                 break;
             case GET_BOOK:
-                cout << "GET BOOK\n";
+                if (do_get_book(sessionData) < 0)
+                    stop = true;
+
                 break;
             case ADD_BOOK:
-                if (do_add_book(username, sid, jwt) < 0)
+                if (do_add_book(sessionData) < 0)
                     stop = true;
 
                 break;
@@ -133,7 +68,7 @@ int main() {
                 cout << "DELETE BOOK\n";
                 break;
             case LOGOUT:
-                if (do_logout(sid) < 0)
+                if (do_logout(sessionData) < 0)
                     stop = true;
                 break;
             case EXIT:

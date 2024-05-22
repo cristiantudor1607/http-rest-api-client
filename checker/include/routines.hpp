@@ -17,11 +17,16 @@
 #define CREDENTIAL_FAIL 3
 #define OK 0
 
+#define INVALID -10
+
 using namespace std;
 
 int do_register();
 int do_login(SessionData *data);
 int do_enter_library(SessionData *data);
 int do_get_books(SessionData *data);
+int do_add_book(SessionData *data);
+int do_logout(SessionData *data);
+int do_get_book(SessionData *data);
 
 #endif //_ROUTINES_HPP

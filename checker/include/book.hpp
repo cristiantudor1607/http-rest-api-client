@@ -5,6 +5,7 @@
 #include <string>
 
 #include "json.hpp"
+#include "utils.hpp"
 
 #define PAGE_COUNT_WRONG (-1)
 #define EMPTY_FIELDS (-2)

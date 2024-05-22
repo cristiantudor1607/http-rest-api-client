@@ -19,6 +19,88 @@ static int parse_register_response(string& username, char *response) {
     return FAIL;
 }
 
+static void parse_add_book_response(char *response) {
+    string code = extract_http_status_code(response);
+    if (code == "200 OK") {
+        fprintf(stdout, "[SUCCESS] [200 OK] Book added to the library.\n");
+        return;
+    }
+
+    char *json = basic_extract_json_response(response);
+    fprintf(stdout, "[ERROR] [%s] %s\n", code.c_str(), extract_error(json).c_str());
+}
+
+static void print_books(string& user, char *response) {
+    if (strstr(response, "200 OK") == NULL) {
+        char *json_start = basic_extract_json_response(response);
+        fprintf(stdout, "[ERROR] %s\n", extract_error(json_start).c_str());
+        return;
+    }
+
+    if (strstr(response, "[]")) {
+        fprintf(stdout, "[SUCCESS] [200 OK] %s's library is empty.\n", user.c_str());
+        fprintf(stdout, "[]\n");
+        return;
+    }
+
+    char *ptr = strstr(response, "[");
+    json j = json::parse(ptr);
+    fprintf(stdout, "[SUCCESS] %s's library:\n", user.c_str());
+    fprintf(stdout, "%s\n", j.dump(STD_INTEND).c_str());
+}
+
+// https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+static int check_credential(string& credential) {
+    stringstream ss(credential);
+
+    string word;
+    getline(ss, word, ' ');
+    credential = word;
+
+    if (getline(ss, word, ' '))
+        return FORMAT_WRONG;
+
+    credential = word;
+    return FORMAT_OK;
+}
+
+static int check_id(string& buff) {
+    if (!has_only_digits(buff))
+        return INVALID;
+
+    int res;
+    try {
+        res = stoi(buff);
+    } catch (exception e) {
+        return INVALID;
+    }
+
+    return res < 0 ? INVALID : res;
+}
+
+static void prompt_credentials(string& username, string& password) {
+    fprintf(stdout, "username=");
+    getline(cin, username);
+    fprintf(stdout, "password=");
+    getline(cin, password);
+
+    if (check_credential(username) < 0 || check_credential(password) < 0) {
+        cout << "[ERROR] Credentials should not contain spaces.\n";
+        username = password = "";
+    }
+}
+
+static int prompt_id() {
+    string buff;
+
+    fprintf(stdout, "id=");
+    getline(cin, buff);
+
+    int ret = check_id(buff);
+    return ret < 0 ? -1 : ret;
+}
+
+
 int do_register() {
     int sockfd = -1;
     char *acc = NULL;
@@ -166,5 +248,113 @@ int do_get_books(SessionData *data) {
 
     print_books(data->username, acc);
     free(acc);
+    return SUCCESS;
+}
+
+int do_add_book(SessionData *data) {
+    if (!data->connected) {
+        fprintf(stdout, "[ERROR] User not logged in.\n");
+        return FAIL;
+    }
+
+    if (!data->access) {
+        fprintf(stdout, "[ERROR] User %s doesn't have access "
+                        "to library.\n", data->username.c_str());
+        return FAIL;
+    }
+
+
+    Book book;
+    book.read();
+    switch (book.validate()) {
+        case PAGE_COUNT_WRONG:
+            fprintf(stdout, "[ERROR] The given page count isn't a number.\n");
+            return FAIL;
+        case EMPTY_FIELDS:
+            fprintf(stdout, "[ERROR] Empty strings are not allowed.\n");
+            return FAIL;
+        default:
+            break;
+    }
+
+    int sockfd;
+    char *acc;
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    string obj = book.pack_to_json();
+    string request = generate_add_book_request(obj, data->jwt);
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    close_connection(sockfd);
+
+    if (!acc) {
+        display_memory_fail();
+        return MEM_FAIL;
+    }
+
+    parse_add_book_response(acc);
+    free(acc);
+    return SUCCESS;
+}
+
+int do_logout(SessionData *data) {
+    int sockfd = -1;
+    char *acc;
+
+    if (!data->connected) {
+        fprintf(stdout, "[ERROR] User not logged in.\n");
+        return FAIL;
+    }
+
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    string request = generate_logout_request(data->sid);
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    close_connection(sockfd);
+
+    if (!acc) {
+        display_memory_fail();
+        return MEM_FAIL;
+    }
+
+    string code = extract_http_status_code(acc);
+    if (code == "200 OK") {
+        fprintf(stdout, "[SUCCESS] [200 OK] User %s logged out.\n", data->username.c_str());
+        free(acc);
+        data->reset();
+        return SUCCESS;
+    }
+
+    // TODO: Add a reset here
+    char *json = basic_extract_json_response(acc);
+    fprintf(stdout, "[ERROR] [%s] %s\n", code.c_str(), extract_error(json).c_str());
+    free(acc);
+    return SUCCESS;
+}
+
+int do_get_book(SessionData *data) {
+    int sockfd;
+    char *acc;
+
+    if (!data->connected) {
+        fprintf(stdout, "[ERROR] User not logged in.\n");
+        return FAIL;
+    }
+
+    if (!data->access) {
+        fprintf(stdout, "[ERROR] User %s doesn't have access "
+                        "to library.\n", data->username.c_str());
+        return FAIL;
+    }
+
+    int id;
+    if ((id = prompt_id()) < 0) {
+        fprintf(stdout, "[ERROR] The id is not a number.\n");
+        return FAIL;
+    }
+
     return SUCCESS;
 }

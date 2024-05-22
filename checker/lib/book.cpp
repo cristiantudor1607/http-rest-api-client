@@ -34,6 +34,9 @@ int Book::validate() {
     // TODO: Check for numbers in author
     // TODO: Check for numbers in genre
 
+    if (!has_only_digits(input_page_count))
+        return PAGE_COUNT_WRONG;
+
     size_t aux;
     try {
         aux = stoul(input_page_count);
