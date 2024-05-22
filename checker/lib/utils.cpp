@@ -68,6 +68,35 @@ int parse_input(string& input) {
     return -1;
 }
 
+int open_connection(int *sockfd) {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        *sockfd = -1;
+        fprintf(stderr, "[ERROR] socket() failed. Exiting...\n");
+        return -1;
+    }
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(struct sockaddr_in));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(PORT);
+    inet_pton(AF_INET, IP, &(addr.sin_addr));
+
+    if (connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) {
+        *sockfd = -1;
+        fprintf(stderr, "[ERROR] connect() failed. Exiting...\n");
+        close(fd);
+        return - 1;
+    }
+
+    *sockfd = fd;
+    return 0;
+}
+
+void close_connection(int sockfd) {
+    close(sockfd);
+}
+
 int send_to_server(int sockfd, const char *message)
 {
     int bytes, sent = 0;
@@ -153,4 +182,12 @@ char *receive_from_server(int sockfd)
 char *basic_extract_json_response(char *str)
 {
     return strstr(str, "{\"");
+}
+
+void SessionData::reset() {
+    this->username = "";
+    this->sid = "";
+    this->jwt = "";
+    this->connected = false;
+    this->access = false;
 }

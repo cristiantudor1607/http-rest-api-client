@@ -5,6 +5,10 @@
 #include <sstream>
 #include <unistd.h>
 
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,6 +16,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
 
 #include "defines.hpp"
 #include "json.hpp"
@@ -21,6 +26,8 @@ extern "C" {
 
 using namespace std;
 
+int open_connection(int *sockfd);
+void close_connection(int sockfd);
 
 void prompt_credentials(string& username, string& password);
 int parse_input(string& input);
@@ -28,5 +35,15 @@ int parse_input(string& input);
 int send_to_server(int sockfd, const char *message);
 char *receive_from_server(int sockfd);
 char *basic_extract_json_response(char *str);
+
+class SessionData {
+public:
+    string username;
+    string jwt, sid;
+    bool connected;
+    bool access;
+
+    void reset();
+};
 
 #endif //_UTILS_HPP
