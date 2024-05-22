@@ -30,6 +30,23 @@ static void parse_add_book_response(char *response) {
     fprintf(stdout, "[ERROR] [%s] %s\n", code.c_str(), extract_error(json).c_str());
 }
 
+static int parse_get_book_response(char *response) {
+    string code = extract_http_status_code(response);
+
+    char *json_start = basic_extract_json_response(response);
+    if (code != "200 OK") {
+        fprintf(stdout, "[ERROR] [%s] %s\n", code.c_str(),
+                extract_error(json_start).c_str());
+
+        return FAIL;
+    }
+
+    json j = json::parse(json_start);
+    fprintf(stdout, "[SUCCESS] [200 OK] Book was found:\n");
+    fprintf(stdout, "%s\n", j.dump(STD_INTEND).c_str());
+    return SUCCESS;
+}
+
 static void print_books(string& user, char *response) {
     if (strstr(response, "200 OK") == NULL) {
         char *json_start = basic_extract_json_response(response);
@@ -356,5 +373,21 @@ int do_get_book(SessionData *data) {
         return FAIL;
     }
 
-    return SUCCESS;
+    if (open_connection(&sockfd) < 0)
+        return OPEN_CONN_FAIL;
+
+    string request = generate_get_book_request(data->jwt, id);
+    send_to_server(sockfd, request.data());
+    acc = receive_from_server(sockfd);
+    close_connection(sockfd);
+
+    if (!acc) {
+        display_memory_fail();
+        return MEM_FAIL;
+    }
+
+    int ret = parse_get_book_response(acc);
+
+    free(acc);
+    return ret;
 }

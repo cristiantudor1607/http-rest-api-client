@@ -17,8 +17,8 @@ import pexpect
 
 #TEST_USERNAME = "test"
 #TEST_PASSWORD = "test123"
-TEST_USERNAME = "fourarms"
-TEST_PASSWORD = "red"
+TEST_USERNAME = "patru-brate"
+TEST_PASSWORD = "cap-de-diamant"
 EXPECT_TIMEOUT = 1  # 1 second should be enough...
 TEXT_INDENT = "    "
 

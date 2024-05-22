@@ -47,22 +47,18 @@ int main() {
             case ENTER_LIBRARY:
                 if (do_enter_library(sessionData) < 0)
                     stop = true;
-
                 break;
             case GET_BOOKS:
                 if (do_get_books(sessionData) < 0)
                     stop = true;
-
                 break;
             case GET_BOOK:
                 if (do_get_book(sessionData) < 0)
                     stop = true;
-
                 break;
             case ADD_BOOK:
                 if (do_add_book(sessionData) < 0)
                     stop = true;
-
                 break;
             case DELETE_BOOK:
                 cout << "DELETE BOOK\n";
