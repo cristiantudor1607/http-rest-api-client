@@ -8,11 +8,20 @@
 #define CONTENT_LENGTH "Content-Length: "
 #define CONTENT_LENGTH_SIZE (sizeof(CONTENT_LENGTH) - 1)
 
+void remove_trailing_whitespaces(string& s) {
+    char *begin = &s[0];
 
+    char *ptr = &s[s.size() - 1];
+    while (*ptr == ' ' && ptr >= &s[0]) {
+        *ptr = '\0';
+        ptr--;
+    }
 
+    s = string(begin);
+}
 
 int parse_input(string& input) {
-    // TODO: Add pre-processing
+    remove_trailing_whitespaces(input);
 
     if (input == "register")
         return REGISTER;

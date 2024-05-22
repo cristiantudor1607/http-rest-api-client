@@ -11,13 +11,6 @@
 #include "include/utils.hpp"
 #include "include/routines.hpp"
 
-//#define OPEN_CONN_FAIL (-2)
-//#define MEM_FAIL (-1)
-//#define FAIL 1
-//#define SUCCESS 2
-//#define CREDENTIAL_FAIL 3
-//#define OK 0
-
 using namespace std;
 
 int main() {
@@ -73,7 +66,8 @@ int main() {
                 break;
             default:
                 fprintf(stdout, "[ERROR] Unknown command.\n");
-                // cout << input << "control" << endl;
+                remove_trailing_whitespaces(input);
+                cout << input << "control" << endl;
                 break;
         }
 
