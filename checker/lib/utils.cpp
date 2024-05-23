@@ -12,7 +12,7 @@ void remove_trailing_whitespaces(string& s) {
     char *begin = &s[0];
 
     char *ptr = &s[s.size() - 1];
-    while (*ptr == ' ' && ptr >= &s[0]) {
+    while (isspace(*ptr) && ptr >= &s[0]) {
         *ptr = '\0';
         ptr--;
     }
@@ -20,7 +20,17 @@ void remove_trailing_whitespaces(string& s) {
     s = string(begin);
 }
 
+void remove_leading_whitespaces(string &s) {
+    char *ptr = &s[0];
+
+    while (isspace(*ptr))
+        ptr++;
+
+    s = string(ptr);
+}
+
 int parse_input(string& input) {
+    remove_leading_whitespaces(input);
     remove_trailing_whitespaces(input);
 
     if (input == "register")

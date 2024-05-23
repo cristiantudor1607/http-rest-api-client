@@ -31,6 +31,7 @@ int open_connection(int *sockfd);
 void close_connection(int sockfd);
 
 void remove_trailing_whitespaces(string& s);
+void remove_leading_whitespaces(string &s);
 int parse_input(string& input);
 
 int send_to_server(int sockfd, const char *message);

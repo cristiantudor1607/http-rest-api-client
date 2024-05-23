@@ -116,6 +116,12 @@ static void prompt_credentials(string& username, string& password) {
     fprintf(stdout, "password=");
     getline(cin, password);
 
+    remove_leading_whitespaces(username);
+    remove_trailing_whitespaces(username);
+
+    remove_leading_whitespaces(password);
+    remove_trailing_whitespaces(password);
+
     if (check_credential(username) < 0 || check_credential(password) < 0) {
         cout << "[ERROR] Credentials should not contain spaces.\n";
         username = password = "";
@@ -127,6 +133,9 @@ static int prompt_id() {
 
     fprintf(stdout, "id=");
     getline(cin, buff);
+
+    remove_leading_whitespaces(buff);
+    remove_trailing_whitespaces(buff);
 
     int ret = check_id(buff);
     return ret < 0 ? -1 : ret;
@@ -295,9 +304,9 @@ int do_add_book(SessionData *data) {
         return FAIL;
     }
 
-
     Book book;
     book.read();
+    book.clean_text();
     switch (book.validate()) {
         case PAGE_COUNT_WRONG:
             fprintf(stdout, "[ERROR] The given page count isn't a number.\n");

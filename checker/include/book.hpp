@@ -27,6 +27,7 @@ private:
 public:
     Book();
     void read();
+    void clean_text();
     int validate();
     string pack_to_json();
     void print_book();

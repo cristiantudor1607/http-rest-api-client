@@ -25,6 +25,20 @@ void Book::read() {
     getline(cin, input_page_count);
 }
 
+void Book::clean_text() {
+    remove_leading_whitespaces(title);
+    remove_leading_whitespaces(author);
+    remove_leading_whitespaces(genre);
+    remove_leading_whitespaces(publisher);
+    remove_leading_whitespaces(input_page_count);
+
+    remove_trailing_whitespaces(title);
+    remove_trailing_whitespaces(author);
+    remove_trailing_whitespaces(genre);
+    remove_trailing_whitespaces(publisher);
+    remove_trailing_whitespaces(input_page_count);
+}
+
 int Book::validate() {
     if (title.empty() || author.empty() ||
         genre.empty() || publisher.empty() ||
