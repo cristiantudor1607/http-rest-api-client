@@ -73,6 +73,6 @@ int main() {
             break;
     }
 
-    // delete sessionData;
+    delete sessionData;
     return 0;
 }

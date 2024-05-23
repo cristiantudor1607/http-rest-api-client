@@ -1,7 +1,3 @@
-//
-// Created by Cristian-Andrei Tudor on 18.05.2024.
-//
-
 #ifndef HTTP_UTILS_HPP
 #define HTTP_UTILS_HPP
 

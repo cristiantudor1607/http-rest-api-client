@@ -81,7 +81,7 @@ static void print_books(string& user, char *response) {
     fprintf(stdout, "%s\n", j.dump(STD_INTEND).c_str());
 }
 
-// https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+
 static int check_credential(string& credential) {
     stringstream ss(credential);
 
@@ -98,6 +98,9 @@ static int check_credential(string& credential) {
 
 static int check_id(string& buff) {
     if (!has_only_digits(buff))
+        return INVALID;
+
+    if (buff[0] == '0')
         return INVALID;
 
     int res;
@@ -320,7 +323,7 @@ int do_add_book(SessionData *data) {
     book.clean_text();
     switch (book.validate()) {
         case PAGE_COUNT_WRONG:
-            fprintf(stdout, "[ERROR] The given page count isn't a number.\n");
+            fprintf(stdout, "[ERROR] The given page count isn't a valid number.\n");
             return FAIL;
         case EMPTY_FIELDS:
             fprintf(stdout, "[ERROR] Empty strings are not allowed.\n");
@@ -380,7 +383,6 @@ int do_logout(SessionData *data) {
         return SUCCESS;
     }
 
-    // TODO: Add a reset here
     char *json = basic_extract_json_response(acc);
     fprintf(stdout, "[ERROR] [%s] %s\n", code.c_str(), extract_error(json).c_str());
     free(acc);
@@ -404,7 +406,7 @@ int do_get_book(SessionData *data) {
 
     int id;
     if ((id = prompt_id()) < 0) {
-        fprintf(stdout, "[ERROR] The id is not a number.\n");
+        fprintf(stdout, "[ERROR] The id is not a valid number.\n");
         return FAIL;
     }
 
@@ -444,7 +446,7 @@ int do_delete_book(SessionData *data) {
 
     int id;
     if ((id = prompt_id()) < 0) {
-        fprintf(stdout, "[ERROR] The id is not a number.\n");
+        fprintf(stdout, "[ERROR] The id is not a valid number.\n");
         return FAIL;
     }
 

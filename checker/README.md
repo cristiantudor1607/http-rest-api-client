@@ -106,5 +106,11 @@ I would have imposed no numbers in the author name or genre, or the genre to be 
 ➢ It should check is a book is already in library before adding it. In other words, it shouldn't allow duplicates. <br>
 ➢ There are some duplicate code in the parts involving generating requests and sanity checks, so the code should be refactored.
 
+### <font color="3C5B6F"> Resources </font>
+[1] : https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages <br>
+[2] : https://github.com/nlohmann/json <br>
+[3] : https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c &rarr;
+I made the **check_credential** functions using this resource (see **routines.cpp**).
+
 ### License
 **Copyright &copy; May 2024, Cristian-Andrei Tudor 321CAa. Released under the PCom Team License.**

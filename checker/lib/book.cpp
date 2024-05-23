@@ -45,10 +45,10 @@ int Book::validate() {
         input_page_count.empty())
         return EMPTY_FIELDS;
 
-    // TODO: Check for numbers in author
-    // TODO: Check for numbers in genre
-
     if (!has_only_digits(input_page_count))
+        return PAGE_COUNT_WRONG;
+
+    if (input_page_count[0] == '0')
         return PAGE_COUNT_WRONG;
 
     size_t aux;

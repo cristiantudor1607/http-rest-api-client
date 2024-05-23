@@ -17,8 +17,8 @@ import pexpect
 
 #TEST_USERNAME = "test"
 #TEST_PASSWORD = "test123"
-TEST_USERNAME = "haskell-curry"
-TEST_PASSWORD = "lambda"
+TEST_USERNAME = "alt-client"
+TEST_PASSWORD = "parola"
 EXPECT_TIMEOUT = 1  # 1 second should be enough...
 TEXT_INDENT = "    "
 
