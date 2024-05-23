@@ -5,88 +5,69 @@
 
 #include <string>
 
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <arpa/inet.h>
-#include <netinet/in.h>
-
 #include "include/defines.hpp"
-#include "include/utils.hpp"
+#include "include/book.hpp"
 #include "include/http-utils.hpp"
+#include "include/utils.hpp"
+#include "include/routines.hpp"
 
 using namespace std;
 
-void init_client(int *sockfd) {
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) {
-        *sockfd = -1;
-        fprintf(stderr, "[ERROR] socket() failed. Exiting...\n");
-        return;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(struct sockaddr_in));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(PORT);
-    inet_pton(AF_INET, IP, &(addr.sin_addr));
-
-    if (connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) {
-        *sockfd = -1;
-        fprintf(stderr, "[ERROR] connect() failed. Exiting...\n");
-        close(fd);
-        return;
-    }
-
-    *sockfd = fd;
-}
-
 int main() {
-    int sockfd = -1;
-    init_client(&sockfd);
-    if (sockfd < 0)
-        return 0;
+    auto *sessionData = new (nothrow) SessionData();
+    if (!sessionData) {
+        fprintf(stderr, "[ERROR] Memory fail at initializing the client. "
+                        "Exiting...\n");
+        return EXIT_FAILURE;
+    }
 
     bool stop = false;
-    string input, request;
-    string username, password;
+    string input;
+    string username, sid, jwt;
+
     for (;;) {
         getline(cin, input);
         int opcode = parse_input(input);
         switch (opcode) {
             case REGISTER:
-                prompt_credentials(username, password);
-                request = generate_register_request(username, password);
-                cout << request;
-
+                if (do_register() < 0)
+                    stop = true;
                 break;
             case LOGIN:
-                cout << "LOGIN\n";
+                if (do_login(sessionData) < 0)
+                    stop = true;
                 break;
             case ENTER_LIBRARY:
-                cout << "ENTER LIBRARY\n";
+                if (do_enter_library(sessionData) < 0)
+                    stop = true;
                 break;
             case GET_BOOKS:
-                cout << "GET MULTIPLE BOOKS\n";
+                if (do_get_books(sessionData) < 0)
+                    stop = true;
                 break;
             case GET_BOOK:
-                cout << "GET BOOK\n";
+                if (do_get_book(sessionData) < 0)
+                    stop = true;
                 break;
             case ADD_BOOK:
-                cout << "ADD BOOK\n";
+                if (do_add_book(sessionData) < 0)
+                    stop = true;
                 break;
             case DELETE_BOOK:
-                cout << "DELETE BOOK\n";
+                if (do_delete_book(sessionData) < 0)
+                    stop = true;
                 break;
             case LOGOUT:
-                cout << "LOGOUT\n";
+                if (do_logout(sessionData) < 0)
+                    stop = true;
                 break;
             case EXIT:
-                cout << "EXIT\n";
                 stop = true;
                 break;
             default:
-                cout << "[ERROR] Unrecognised command\n";
+                fprintf(stdout, "[ERROR] Unknown command.\n");
+                remove_trailing_whitespaces(input);
+                cout << input << "control" << endl;
                 break;
         }
 
@@ -94,6 +75,5 @@ int main() {
             break;
     }
 
-    close(sockfd);
     return 0;
 }
