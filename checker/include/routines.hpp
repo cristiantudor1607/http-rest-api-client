@@ -21,7 +21,7 @@
 
 using namespace std;
 
-int do_register();
+int do_register(SessionData *data);
 int do_login(SessionData *data);
 int do_enter_library(SessionData *data);
 int do_get_books(SessionData *data);

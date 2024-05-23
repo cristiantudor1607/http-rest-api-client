@@ -142,16 +142,25 @@ static int prompt_id() {
 }
 
 
-int do_register() {
+int do_register(SessionData *data) {
     int sockfd = -1;
     char *acc = NULL;
+
+    if (data->connected) {
+        fprintf(stdout, "[ERROR] You're connected as %s. "
+                        "You should logout before creating a new account.\n",
+                        data->username.c_str());
+        return FAIL;
+    }
 
     string request;
     string username, password;
 
     prompt_credentials(username, password);
-    if (username.empty() || password.empty())
+    if (username.empty() || password.empty()) {
+        fprintf(stdout, "[ERROR] Empty credentials are not allowed.\n");
         return CREDENTIAL_FAIL;
+    }
 
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;
@@ -182,8 +191,10 @@ int do_login(SessionData *data) {
     }
 
     prompt_credentials(username, password);
-    if (username.empty() || password.empty())
+    if (username.empty() || password.empty()) {
+        fprintf(stdout, "[ERROR] Empty credentials are not allowed.\n");
         return CREDENTIAL_FAIL;
+    }
 
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;

@@ -30,7 +30,7 @@ int main() {
         int opcode = parse_input(input);
         switch (opcode) {
             case REGISTER:
-                if (do_register() < 0)
+                if (do_register(sessionData) < 0)
                     stop = true;
                 break;
             case LOGIN:

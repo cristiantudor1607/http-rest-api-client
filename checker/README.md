@@ -1,5 +1,36 @@
 ## <font color="3C5B6F"> REST-API HTTP Client </font>
 
+### <font color="3C5B6F"> How to use </font>
+➢ First, if you don't have an account, you should make it using <font color="948979">**register**</font> command.
+```
+> register
+< username=
+> $your-username$
+< password=
+> $your-password$
+```
+➢ If the username you provided isn't taken, you should get the message:
+> <font color="41B06E">[SUCCESS] [201 Created] User $your-username$ registered. </font>
+>
+
+➢ Otherwise, you'll get an error.
+> All errors are reported by <font color="E72929">[ERROR]</font> keyword, followed by a specific message describing
+> the error.
+
+
+➢ After register, you are not logged in.
+
+➢ Now, login to your account by using <font color="948979">**login**</font> command. It will show the same prompt for
+username and password as register.
+
+➢ If the account exists, you should get:
+> <font color="41B06E">[SUCCESS] [200 OK] User $your-username$ logged in. </font>
+
+➢ Otherwise, you'll get an error.
+> **!** **There are rules:**
+> * 
+
+
 ### <font color="3C5B6F"> Project Structure </font>
 * <font color="948979">**client.cpp**</font> &rarr; The entry point of the client. It contains the main() function.
 * <font color="948979">**json.hpp**</font> &rarr; The Nlohmann JSON Parser header file.
