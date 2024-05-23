@@ -1,7 +1,7 @@
 ## <font color="3C5B6F"> REST-API HTTP Client </font>
 
 ### <font color="3C5B6F"> How to use </font>
-➢ First, if you don't have an account, you should make it using <font color="948979">**register**</font> command.
+➢ First, if you don't have an account, you should make one using <font color="948979">**register**</font> command.
 ```
 > register
 < username=
@@ -26,9 +26,20 @@ username and password as register.
 ➢ If the account exists, you should get:
 > <font color="41B06E">[SUCCESS] [200 OK] User $your-username$ logged in. </font>
 
-➢ Otherwise, you'll get an error.
-> **!** **There are rules:**
-> * 
+➢ Otherwise, you'll get an error. <br>
+
+➢ Now, to be able to do changes or see your library, you should access your library by typing:
+```
+> enter_library
+```
+➢ It shouldn't throw an error if you logged in previously, but you'll be notified for sure if something went
+wrong. Otherwise, it'll prompt the following message:
+> <font color="41B06E">[SUCCESS] [200 OK] The user $username$ has acquired access to library.</font>
+
+> **!** **There are some intuitive rules:**
+> * Once you're logged in, you can't register a new account or connect to other account, until you disconnect (logout).
+> * If you want to access your library (get books, add books, delete books), you have to **enter library** first.
+> * You can exit any time, but you'll be disconnected, if you were connected.
 
 
 ### <font color="3C5B6F"> Project Structure </font>
@@ -68,7 +79,32 @@ calling this method.
 and parse HTTP Responses.
 
 ### <a id="routines"></a> <font color="3C5B6F">Routines</font>
+> **You can recognize a routine by its prefix. It always starts with do_$command_name$**.
 
+➢ The routines take care of generating requests, sending requests, receiving responses and parse responses.
+> There is always the same structure for a routine:
+> * Make the sanity checks, based on the session data provided. It assures that the rules mentioned above are followed.
+> <br> For example, it checks if the user is connected for all the command that require this, like enter_library, add_book,
+> delete_book, get_books, get_book, etc. It also checks if the user has access to the library.
+> * After the sanity checks, it generates the request and tries to send it. If some error occurred, it will return an
+> error, defined as an integer, in **defines.hpp**.
+> * It receives the response from the server and close the connection. If there are memory errors, it will drop an error, too.
+> * It generates an output, based on the response provided and return either **SUCCESS** or **FAIL** (also defined in defines.hpp).
+
+➢ The routines will modify the session data if needed. For example, when logging out, it will erase all the session data
+fields.
+
+### <font color="3C5B6F"> Observations </font>
+> The **leading** and **trailing** whitespaces read from standard input are removed automatically. <br>
+> It doesn't remove extra spaces between words.
+
+
+### <font color="3C5B6F"> Improvements </font>
+➢ It should use the HTTP Keep-Alive header, instead of opening and closing the connection each time a new request is sent. <br>
+➢ More text validation could be done when reading infos of a book (but there were no restrictions specified). For example,
+I would have imposed no numbers in the author name or genre, or the genre to be chosen from a predefined selection. <br>
+➢ It should check is a book is already in library before adding it. In other words, it shouldn't allow duplicates. <br>
+➢ There are some duplicate code in the parts involving generating requests and sanity checks, so the code should be refactored.
 
 ### License
 **Copyright &copy; May 2024, Cristian-Andrei Tudor 321CAa. Released under the PCom Team License.**

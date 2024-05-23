@@ -65,9 +65,7 @@ int main() {
                 stop = true;
                 break;
             default:
-                fprintf(stdout, "[ERROR] Unknown command.\n");
-                remove_trailing_whitespaces(input);
-                cout << input << "control" << endl;
+                fprintf(stdout, "[ERROR] Query not supported.\n");
                 break;
         }
 
@@ -75,5 +73,6 @@ int main() {
             break;
     }
 
+    // delete sessionData;
     return 0;
 }
