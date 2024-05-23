@@ -11,3 +11,4 @@ tmp/
 *.o
 client
 *.venv
+*.zip

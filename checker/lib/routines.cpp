@@ -83,16 +83,11 @@ static void print_books(string& user, char *response) {
 
 
 static int check_credential(string& credential) {
-    stringstream ss(credential);
+    for (size_t i = 0; i < credential.size(); i++) {
+        if (!isalnum(credential[i]))
+            return FORMAT_WRONG;
+    }
 
-    string word;
-    getline(ss, word, ' ');
-    credential = word;
-
-    if (getline(ss, word, ' '))
-        return FORMAT_WRONG;
-
-    credential = word;
     return FORMAT_OK;
 }
 
@@ -125,8 +120,15 @@ static void prompt_credentials(string& username, string& password) {
     remove_leading_whitespaces(password);
     remove_trailing_whitespaces(password);
 
+    if (username.empty() || password.empty()) {
+        fprintf(stdout, "[ERROR] Empty credentials aren't allowed.\n");
+        username = password = "";
+        return;
+    }
+
     if (check_credential(username) < 0 || check_credential(password) < 0) {
-        cout << "[ERROR] Credentials should not contain spaces.\n";
+        fprintf(stdout, "[ERROR] Credentials should contain only "
+                        "alpha-numeric characters.\n");
         username = password = "";
     }
 }
@@ -160,10 +162,9 @@ int do_register(SessionData *data) {
     string username, password;
 
     prompt_credentials(username, password);
-    if (username.empty() || password.empty()) {
-        fprintf(stdout, "[ERROR] Empty credentials are not allowed.\n");
+    if (username.empty() || password.empty())
         return CREDENTIAL_FAIL;
-    }
+
 
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;
@@ -194,10 +195,8 @@ int do_login(SessionData *data) {
     }
 
     prompt_credentials(username, password);
-    if (username.empty() || password.empty()) {
-        fprintf(stdout, "[ERROR] Empty credentials are not allowed.\n");
+    if (username.empty() || password.empty())
         return CREDENTIAL_FAIL;
-    }
 
     if (open_connection(&sockfd) < 0)
         return OPEN_CONN_FAIL;

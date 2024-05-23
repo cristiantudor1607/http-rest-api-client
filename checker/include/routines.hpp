@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <cctype>
 #include <string>
 
 #include "../include/defines.hpp"
